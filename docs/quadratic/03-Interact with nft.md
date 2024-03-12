@@ -4,14 +4,14 @@
 Firstly, export the variables for easier interaction so that we do not have to type them every time.
 
 For the Theta-testnet-001 testnet (change these for appropriate testnet)
-```
-export RPC="https://rpc-palvus.pion-1.ntrn.tech:443
+```bash
+export RPC="https://rpc-palvus.pion-1.ntrn.tech:443"
 export CHAIN_ID="pion-1"
 export FEE_DENOM="untrn"
 ```
 
 Then,
-```
+```bash
 # bash
 export NODE="--node $RPC"
 export TXFLAG="${NODE} --chain-id ${CHAIN_ID} --gas-prices 0.25${FEE_DENOM} --gas auto --gas-adjustment 1.3"
@@ -23,7 +23,7 @@ export TXFLAG=($NODE --chain-id $CHAIN_ID --gas-prices 0.25$FEE_DENOM --gas auto
 
 To store the contract: 
 
-```
+```bash
 RES=$(wasmd tx wasm store artifacts/nft.wasm --from wallet $TXFLAG -y --output json -b block)
 # Otherwise, you will have to type in the following command to upload the wasm binary to the testnet:
 RES=$(wasmd tx wasm store artifacts/nft.wasm --from wallet --node https://rpc-palvus.pion-1.ntrn.tech:443 --chain-id pion-1 --gas-prices 0.25untrn --gas auto --gas-adjustment 1.3 -y --output json -b block)
@@ -32,7 +32,7 @@ RES=$(wasmd tx wasm store artifacts/nft.wasm --from wallet --node https://rpc-pa
 
 Then, the following gives the code id of the deployed contract:
 
-```
+```bash
 CODE_ID=$(echo $RES | jq -r '.logs[0].events[-1].attributes[0].value')
 echo $CODE_ID
 ```
@@ -41,7 +41,7 @@ Now, the instantiate msg for the NFT contract is:
 
 Write your wallet address to both owner and minter as only the owner of the admin (owner) can use execute functions and if the admin and owner is different, minting will throw an error due to extending cw721_base.
 
-```
+```bash
 CW721_INIT='{"owner": ..address...,"minter": ..address.. , "name": "My NFT Tokens", "symbol": "MyNFT"}'
 ```
 
@@ -61,7 +61,7 @@ echo $NFT_CONTRACT
 # Mint A NFT
 Mint a NFT to an address (don't confuse with the admin address, this address is the address that will hold this unique nft token):
 
-```
+```bash
 MINT='{"mint": { "token_id": "1", "owner": ..address.., "extension": {"name": "Voting_NFT_1", "voting_power":"5"}}}'
 wasmd tx wasm execute $NFT_CONTRACT "$MINT" --from wallet $TXFLAG -y
 ```
@@ -69,38 +69,38 @@ wasmd tx wasm execute $NFT_CONTRACT "$MINT" --from wallet $TXFLAG -y
 # Query Functions
 Query all NFT info by its unique token id:
 
-```
+```bash
 NFT_INFO='{ "nft_info": { "token_id": "1" } }'
 wasmd query wasm contract-state smart $NFT_CONTRACT "$NFT_INFO" $NODE --output json
 ```
 
 Query Extension by token id:
 
-```
+```bash
 NFT_EXTENSION='{"check_voting_power": {"token_id": "1" } }'
 wasmd query wasm contract-state smart $NFT_CONTRACT "$NFT_EXTENSION" $NODE --output json
 ```
 
 To see the owner address of a token by its unique token id:
 
-```
+```bash
 OWNER_OF='{ "owner_of": { "token_id": "1" } }'
 wasmd query wasm contract-state smart $NFT_CONTRACT "$OWNER_OF" $NODE --output json
 ```
 
 Query all tokens by its owner address:
-```
+```bash
 TOKENS='{ "tokens": { "owner": ..address..}}'
 wasmd query wasm contract-state smart $NFT_CONTRACT "$TOKENS" $NODE --output json
 ```
 
-# CosmJS Actions
+# CosmJS Actions
 
 NFT contract can also be interacted with using CosmJS. To create typescript types and the client, we can use [ts-codegen](https://github.com/CosmWasm/ts-codegen) by [Cosmology](https://cosmology.zone/).
 
 Under the direction src/nft, run
 
-```
+```bash
 cosmwasm-ts-codegen generate \
     --plugin client
     --schema ./schema \
@@ -1359,13 +1359,13 @@ export class NftClient extends NftQueryClient implements NftMutableInterface {
 
 Now, having the necessary files, we can start the CosmJS cli by
 
-```
+```bash
 npx @cosmjs/cli@^0.32.3
 ```
 
 Then, 
 
-```
+```typescript
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { NftClient } from "./Nft.client"; // Replace with the actual path to the file
 import { DirectSecp256k1HdWallet, DirectSecp256k1Wallet } from "@cosmjs/proto-signing";
@@ -1416,7 +1416,7 @@ console.log(instantiateResponse)
 ```
 This returns
 
-``` title = 'console.log(instantiateResponse)
+```typescript title = 'console.log(instantiateResponse)
 {
   contractAddress: 'neutron1e7yppujrshzzsqfflu09udrje0zpd6jnfwe304wdexl7dd28gqxqv8x776',
   logs: [ { msg_index: 0, log: '', events: [Array] } ],
@@ -1442,7 +1442,7 @@ undefined
 
 To interact with the contract, we need to create an instance of client using NftClient from Nft.client.ts
 
-```
+```typescript
 // const contractAddress = instantiateResponse.contractAddress; gets the contract Address
 // For already deployed contract
 const contractAddress = "neutron1e7yppujrshzzsqfflu09udrje0zpd6jnfwe304wdexl7dd28gqxqv8x776";
@@ -1472,7 +1472,7 @@ console.log("Mint NFT result:", mintResult);
 ```
 which returns
 
-```
+```typescript
 Mint NFT result: {
   logs: [ { msg_index: 0, log: '', events: [Array] } ],
   height: 12301601,
@@ -1501,29 +1501,29 @@ const voting_power = await client.queryContractSmart(contractAddress, {extension
 console.log(voting_power)
 ```
 
-```
+```typescript
     { voting_power: '5' }
 
 ```
 
-```
+```typescript
 const TokensResponse = await client.queryContractSmart(contractAddress, { tokens: { owner: senderAddress }});
 console.log(TokensResponse)
 ```
 
-```
+```typescript
 { tokens: [ '1' ] }
 
 ```
 
-```
+```typescript
 const OwnerOfResponse = await client.queryContractSmart(contractAddress, { owner_of: { token_id: "1" }});
 console.log(OwnerOfResponse)
 
 ```
 
 which returns
-```
+```typescript
 {
   owner: 'neutron1tuu594kmqax6k8crqtjaqrypux3z5aq9tg5lm5',
   approvals: []

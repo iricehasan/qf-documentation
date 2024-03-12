@@ -3,41 +3,39 @@
 
 To store the contract: 
 
-```
+```bash
 RES=$(wasmd tx wasm store artifacts/cw_quadratic_funding.wasm --from wallet $TXFLAG -y --output json -b block)
 # Otherwise, you will have to type in the following command to upload the wasm binary to the testnet:
-RES=$(wasmd tx wasm store artifacts/nft.wasm --from wallet --node https://rpc-palvus.pion-1.ntrn.tech:443 --chain-id pion-1 --gas-prices 0.025untrn --gas auto --gas-adjustment 1.3 -y --output json -b block)
+RES=$(wasmd tx wasm store artifacts/cw_quadratic_funding.wasm --from wallet --node https://rpc-palvus.pion-1.ntrn.tech:443 --chain-id pion-1 --gas-prices 0.025untrn --gas auto --gas-adjustment 1.3 -y --output json -b block)
 ```
 
 
 Then, the following gives the code id of the deployed contract
 
-```
+```bash
 QF_CODE_ID=$(echo $RES | jq -r '.logs[0].events[-1].attributes[0].value')
 echo $QF_CODE_ID
-```
-
 QF_CODE_ID=3335
-
+```
 
 Now, the instantiate msg for the quadratic funding contract is:
 
 Write your wallet address to with the same contract address as the nft contract admin. Note that the amount provided in instantiation is the budget of the quadratic funding round, and the nft_address is the nft contract address that is deployed.
 
-```
+```bash
 INIT='{"admin": ..address..., "nft_address": ..address.. "leftover_addr": ..address.., "voting_period": { at_height: "257600" }}, "proposal_period": { at_height: "257600" }, "budget_denom": "ucosm", "algorithm": { capital_constrained_liberal_radicalism: {parameter: "param"}} '
 ```
 
  
 
-```
+```bash
 wasmd tx wasm instantiate $QF_CODE_ID "$INIT" --amount 1000000untrn --from wallet --label "quadratic funding" $TXFLAG -y --no-admin
 ```
 
 
 We can check the contract details
 
-```
+```bash
 CONTRACT=$(wasmd query wasm list-contract-by-code $QF_CODE_ID $NODE --output json | jq -r '.contracts[-1]')
 echo $CONTRACT
 ```
@@ -45,7 +43,7 @@ echo $CONTRACT
 
 Creating proposals with a title, description and metadata when the height is smaller than the proposal_period given in instantiation. The owner address should be the address that executes this transaction so only the proposal owner can create proposals. fund_address is the address that funds will be sent to when the distribution function is triggered (after the proposal and voting period ended).
 
-```
+```bash
 CreateProposal {
     title: String,
     owner: String,
@@ -55,7 +53,7 @@ CreateProposal {
 }
 ```
 
-```
+```bash
 CREATE_PROPOSAL='{"title": "title1", "owner": ..address.., "description": "desc", "fund_addresss": ..address..}'
 wasmd tx wasm execute $CONTRACT "$CREATE_PROPOSAL" --from wallet $TXFLAG -y
 ```
@@ -66,7 +64,7 @@ wasmd tx wasm execute $CONTRACT "$CREATE_PROPOSAL" --from wallet $TXFLAG -y
 Each non-transferable token holder can vote within their voting-power during the voting_period (given in instantiation where height is smaller than the voting period height) to a poroposal with proposal_id and the desired sent_vote. They can distribute their votes to more than one proposal within their total voting power.
 It is assumed that there is only one non-transferable token per one address. So, if an address has more than one non-transferable token minted to their address, they can only use the first one to vote.
 
-```
+```bash
 VoteProposal {
     proposal_id: u64,
     sent_vote: Uint128,
@@ -75,7 +73,7 @@ VoteProposal {
 
 Assuming this wallet address has a token with voting power more than 5:
 
-```
+```bash
 VOTE_PROPOSAL='{"proposal_id": "1", "sent_vote":"5"}'
 wasmd tx wasm execute $CONTRACT "$VOTE_PROPOSAL" --from wallet $TXFLAG -y
 ```
@@ -85,7 +83,7 @@ wasmd tx wasm execute $CONTRACT "$VOTE_PROPOSAL" --from wallet $TXFLAG -y
 
 A non-transferable token holder can change their vote on already voted proposals by providing a proposal_id and the new desired vote as sent_vote during the voting_period within their total voting power.
 
-```
+```bash
 ChangeVote {
     proposal_id: u64,
     sent_vote: Uint128,
@@ -95,7 +93,7 @@ ChangeVote {
 
 Assuming this wallet address has a token with voting power more than 10, their vote will be updated to 10 for this proposal.
 
-```
+```bash
 CHANGE_VOTE='{"proposal_id": "1", "sent_vote":"10"}'
 wasmd tx wasm execute $CONTRACT "$CHANGE_VOTE" --from wallet $TXFLAG -y
 ```
@@ -104,11 +102,11 @@ wasmd tx wasm execute $CONTRACT "$CHANGE_VOTE" --from wallet $TXFLAG -y
 
 After the proposal and voting periods end, the admin of the quadratic funding contract (which should also be the minter of the nft contract) can trigger the distribution function to distribute budget to proposals according to the algorithm given in the instantiation.
 
-```
+```bash
 TriggerDistribution {}
 ```
 
-```
+```bash
 TRIGGER='{"trigger_distribution": {}}'
 wasmd tx wasm execute $CONTRACT "$TRIGGER" --from wallet $TXFLAG -y
 ```
@@ -116,12 +114,12 @@ wasmd tx wasm execute $CONTRACT "$TRIGGER" --from wallet $TXFLAG -y
 # Query Functions
 
 There are two query functions in the quadratic funding contract. One can query a single proposal by its proposal id or query all of the proposals.
-```    
+```bash
 ProposalByID { id: u64 },
 AllProposals {},
 ```
 
-```
+```bash
 QUERY_PROPOSAL='{"proposal_by_i_d": {"id": "1"}}'
 wasmd query wasm contract-state smart $CONTRACT "$QUERY_PROPOSAL" $NODE --output json
 
@@ -135,7 +133,7 @@ To create typescript types and the client, we can use [ts-codegen](https://githu
 
 Under the direction src/cw-quadratic-funding, run
 
-```
+```bash
 cosmwasm-ts-codegen generate \
     --plugin client
     --schema ./schema \
@@ -378,12 +376,12 @@ export class QfClient extends QfQueryClient implements QfInterface {
 
 Then, start the CosmJS CLI using
 
-```
+```bash
 npx @cosmjs/cli@^0.32.3 
 ```
 
 Then,
-```
+```typescript
 import { QfClient } from "./Qf.client"; // Replace with the actual path to the file
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
@@ -495,9 +493,9 @@ console.log("Trigger Distribution Result:", triggerDistributionResult);
 
 ```
 
-which gives
+which returns
 
-```
+```typescript
 Trigger Distribution Result: {
   logs: [ { msg_index: 0, log: '', events: [Array] } ],
   height: 12302012,

@@ -47,13 +47,13 @@ CW721_INIT='{"owner": ..address...,"minter": ..address.. , "name": "My NFT Token
 
 Now, instantiate the contract with CW721_INIT instantiate msg:
 
-```
+```bash
 wasmd tx wasm instantiate $CODE_ID "$CW721_INIT" --from wallet --label "non-transferable token" $TXFLAG -y --no-admin
 ```
 
 We can check the contract details
 
-```
+```bash
 NFT_CONTRACT=$(wasmd query wasm list-contract-by-code $CODE_ID $NODE --output json | jq -r '.contracts[-1]')
 echo $NFT_CONTRACT
 ```

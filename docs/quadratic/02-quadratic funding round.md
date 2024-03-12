@@ -1,0 +1,3 @@
+# Quadratic Funding Round 
+
+A funding pool (budget) is established to match contributions made to eligible projects. This budget is typically funded by a combination of public and private sources, ensuring sustainability and continued support for public goods. Public goods are voted during the funding round governed by the quadratic-funding contract to ensure funding decisions are made collectively and transparently. Then, votes on proposals are matched using a quadratic formula, where the matching funds increase non-linearly with the number of unique voters. This means that smaller votes receive a higher matching ratio compared to larger ones, amplifying the impact of grassroots support.

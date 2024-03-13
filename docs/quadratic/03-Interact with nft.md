@@ -3,7 +3,7 @@
 
 Firstly, export the variables for easier interaction so that we do not have to type them every time.
 
-For the Theta-testnet-001 testnet (change these for appropriate testnet)
+For the Pion-1 testnet (change these for appropriate testnet)
 ```bash
 export RPC="https://rpc-palvus.pion-1.ntrn.tech:443"
 export CHAIN_ID="pion-1"
